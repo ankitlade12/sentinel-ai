@@ -41,10 +41,11 @@ def phoenix_mcp_configured() -> bool:
 
 def topic_health(topic: str, store: QuarantineStore, *, org_id: str) -> TopicHealth:
     """Return per-topic health, preferring Phoenix MCP, falling back to the store."""
+    target = monitors.coarse_topic(topic)
     verdicts = [
         v
         for v in monitors.recent_verdicts(store, org_id=org_id)
-        if v.topic.lower() == topic.lower()
+        if monitors.coarse_topic(v.topic) == target
     ]
     samples = len(verdicts)
     held = sum(1 for v in verdicts if v.decision.value == "quarantine")

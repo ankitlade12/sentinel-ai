@@ -42,10 +42,11 @@ class FirestoreQuarantineStore:
         self, *, org_id: str = "riverside", limit: int = 500
     ) -> list[SentinelVerdict]:
         from google.cloud import firestore
+        from google.cloud.firestore_v1.base_query import FieldFilter
 
         query = (
             self._col()
-            .where("org_id", "==", org_id)
+            .where(filter=FieldFilter("org_id", "==", org_id))
             .order_by("created_at", direction=firestore.Query.DESCENDING)
             .limit(limit)
         )
@@ -58,13 +59,17 @@ class FirestoreQuarantineStore:
         status: ReviewStatus = ReviewStatus.PENDING,
         limit: int = 200,
     ) -> list[SentinelVerdict]:
+        # NOTE: three equality filters + order_by requires a Firestore composite
+        # index. On first run Firestore returns a one-click "create index" link;
+        # see docs/GCP_SETUP.md.
         from google.cloud import firestore
+        from google.cloud.firestore_v1.base_query import FieldFilter
 
         query = (
             self._col()
-            .where("org_id", "==", org_id)
-            .where("decision", "==", Decision.QUARANTINE.value)
-            .where("review_status", "==", status.value)
+            .where(filter=FieldFilter("org_id", "==", org_id))
+            .where(filter=FieldFilter("decision", "==", Decision.QUARANTINE.value))
+            .where(filter=FieldFilter("review_status", "==", status.value))
             .order_by("created_at", direction=firestore.Query.DESCENDING)
             .limit(limit)
         )

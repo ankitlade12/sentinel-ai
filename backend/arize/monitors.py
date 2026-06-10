@@ -29,6 +29,49 @@ logger = logging.getLogger(__name__)
 _MAX_ADJUSTMENT = 0.15
 _MIN_SAMPLES = 4
 
+# Coarse topic buckets so the self-improvement loop accumulates across the LLM's
+# varied free-text topic phrasings ("I-90 deadline" vs "green card renewal").
+_TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
+    "immigration": (
+        "i-90",
+        "green card",
+        "n-400",
+        "citizenship",
+        "naturaliz",
+        "visa",
+        "uscis",
+        "immigration",
+        "asylum",
+        "ead",
+        "work authorization",
+    ),
+    "benefits": ("snap", "food stamp", "medicaid", "benefit", "eligibility", "income", "tanf"),
+    "housing": (
+        "tenant",
+        "landlord",
+        "evict",
+        "deposit",
+        "rent",
+        "lease",
+        "housing",
+        "habitability",
+    ),
+    "intake": ("office hours", "intake", "appointment", "hours", "contact", "walk-in"),
+}
+
+
+def coarse_topic(topic: str) -> str:
+    """Map a free-text topic to a stable coarse bucket for trend aggregation.
+
+    Falls back to the normalized original string when no bucket matches, so exact
+    topics still group with themselves.
+    """
+    low = topic.lower()
+    for bucket, keywords in _TOPIC_KEYWORDS.items():
+        if any(k in low for k in keywords):
+            return bucket
+    return low.strip()
+
 
 def recent_verdicts(
     store: QuarantineStore, *, org_id: str, limit: int = 500
@@ -42,9 +85,8 @@ def topic_risk_adjustment(topic: str, store: QuarantineStore, *, org_id: str) ->
     Quarantine rate 0.20 → no bump; 0.50+ → the full +0.15 bump. Below the
     sample floor, returns 0 (not enough history to adapt on).
     """
-    verdicts = [
-        v for v in recent_verdicts(store, org_id=org_id) if v.topic.lower() == topic.lower()
-    ]
+    target = coarse_topic(topic)
+    verdicts = [v for v in recent_verdicts(store, org_id=org_id) if coarse_topic(v.topic) == target]
     if len(verdicts) < _MIN_SAMPLES:
         return 0.0
     held = sum(1 for v in verdicts if v.decision == Decision.QUARANTINE)

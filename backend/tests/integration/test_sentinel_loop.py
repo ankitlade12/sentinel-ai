@@ -17,6 +17,7 @@ _GREEN_CARD_LIE = (
     "If you miss this 30-day deadline, your permanent resident status is automatically lost."
 )
 _OFFICE_HOURS = "We're open Monday through Friday, 9:00 a.m. to 5:00 p.m."
+_DEPOSIT_OVERSTATE = "Your landlord must return your security deposit within 60 days of move-out."
 
 
 def test_hero_scenario_is_quarantined(agent, store, stub_llm):
@@ -41,6 +42,19 @@ def test_low_stakes_is_allowed(agent, stub_llm):
     assert verdict.decision == Decision.ALLOW
     assert verdict.plan.path == "light"
     assert verdict.delivered_answer == _OFFICE_HOURS
+
+
+def test_repair_path_corrects_and_cites(agent, stub_llm):
+    # Medium-stakes contradiction with a clean corpus correction → REPAIR & ALLOW.
+    verdict = agent.run(
+        "How many days does my landlord have to return my security deposit?",
+        _DEPOSIT_OVERSTATE,
+    )
+    assert verdict.decision == Decision.REPAIR_ALLOW
+    assert verdict.requires_human_review is False
+    assert verdict.corrected_answer is not None
+    assert verdict.delivered_answer == verdict.corrected_answer
+    assert "Corrected by Sentinel" in verdict.delivered_answer
 
 
 def test_trust_report_after_runs(agent, store, stub_llm):

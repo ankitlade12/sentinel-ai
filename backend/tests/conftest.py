@@ -46,6 +46,14 @@ def _classify(prompt: str):
             risk_signals=["eligibility", "money"],
             reasoning="Benefits eligibility with a specific dollar threshold.",
         )
+    if "deposit" in low or "landlord" in low or "tenant" in low:
+        return _TriageClassification(
+            topic="security deposit return",
+            stakes=StakesLevel.MEDIUM,
+            specificity=Specificity.SPECIFIC_CLAIM,
+            risk_signals=["money"],
+            reasoning="A specific deposit-return timeframe; medium stakes, recoverable.",
+        )
     # Default: immigration deadline (the hero scenario).
     return _TriageClassification(
         topic="I-90 green card renewal deadline",
@@ -91,6 +99,19 @@ def _extract(prompt: str) -> ClaimExtraction:
             ],
             summary="A specific SNAP income threshold.",
         )
+    if "deposit" in low or "60 days" in low:
+        return ClaimExtraction(
+            claims=[
+                Claim(
+                    id="c1",
+                    text="The landlord must return the security deposit within 60 days.",
+                    claim_type=ClaimType.DEADLINE,
+                    subject="security deposit",
+                    checkable=True,
+                )
+            ],
+            summary="A specific deposit-return deadline.",
+        )
     return ClaimExtraction(
         claims=[
             Claim(
@@ -130,6 +151,13 @@ def _ground(prompt: str):
             confidence=0.9,
             explanation="The SNAP source lists the household-of-three gross limit as $2,798, not $2,200.",
             corrected_text="The SNAP gross monthly income limit for a household of three is about $2,798.",
+        )
+    if "60 days" in low or "deposit" in low:
+        return _GroundingJudgment(
+            status=GroundingStatus.CONTRADICTED,
+            confidence=0.9,
+            explanation="The tenant-rights handbook says deposits are returned within 14 to 30 days, not 60.",
+            corrected_text="Your landlord must return your security deposit within 14 to 30 days, not 60.",
         )
     return _GroundingJudgment(
         status=GroundingStatus.SUPPORTED,

@@ -90,6 +90,15 @@ def test_topic_stats_and_riskiest_safest():
     assert safest == "intake"
 
 
+def test_coarse_topic_buckets():
+    assert monitors.coarse_topic("I-90 green card renewal deadline") == "immigration"
+    assert monitors.coarse_topic("SNAP income eligibility") == "benefits"
+    assert monitors.coarse_topic("security deposit return") == "housing"
+    assert monitors.coarse_topic("clinic office hours") == "intake"
+    # Unknown topics fall back to themselves so exact strings still group.
+    assert monitors.coarse_topic("Some Novel Thing") == "some novel thing"
+
+
 def test_corpus_gap_topics_from_not_found():
     store = MockQuarantineStore()
     store.save_verdict(_verdict("evictions", Decision.QUARANTINE, idx=1, not_found=True))

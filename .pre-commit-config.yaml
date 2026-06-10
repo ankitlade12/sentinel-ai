@@ -1,0 +1,44 @@
+default_language_version:
+  python: python3.12
+default_stages: [pre-commit, pre-push]
+
+repos:
+  # Git & file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+        args: ["--unsafe"]
+      - id: check-toml
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+
+  # Python: ruff (replaces black + isort + flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+      - id: ruff-format
+
+  # Python: strict type checking on the backend
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - pydantic>=2.0
+          - fastapi>=0.115.0
+        files: ^backend/
+
+  # pytest unit tier — fast, hermetic, no network
+  - repo: local
+    hooks:
+      - id: pytest-unit
+        name: pytest (unit tier)
+        entry: uv run pytest -m unit
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]

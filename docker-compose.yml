@@ -1,0 +1,48 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: sentinel-backend:latest
+    container_name: sentinel-backend
+    restart: unless-stopped
+    env_file:
+      - ${SENTINEL_RUNTIME_ENV_FILE:-.env}
+    environment:
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+    networks:
+      - sentinel
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: sentinel-frontend:latest
+    container_name: sentinel-frontend
+    restart: unless-stopped
+    environment:
+      # Server-side calls from the Next.js app to the backend container.
+      SENTINEL_API_TARGET: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - sentinel
+
+networks:
+  sentinel:
+    driver: bridge

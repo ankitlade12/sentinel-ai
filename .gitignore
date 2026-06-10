@@ -1,0 +1,80 @@
+# Sentinel project-specific
+.ruff_cache/
+.sentinel_index/        # local mock vector index artifacts
+tmp/
+image*.png
+*.local.json
+.claude/settings.local.json
+
+# Secrets / environment
+.env
+*.pem
+service-account*.json
+gcp-key*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+!frontend/src/lib/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Virtual envs / package managers
+.venv
+venv/
+.python-version-local
+
+# Test / coverage / type caches
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.cache
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.hypothesis/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OSX
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history
+
+# Logs
+*.log

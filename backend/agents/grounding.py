@@ -22,7 +22,7 @@ from backend.models.grounding import GroundingResult, GroundingStatus, SourcePas
 
 logger = logging.getLogger(__name__)
 
-_RETRIEVE_K = 4
+_RETRIEVE_K = 6
 
 
 class _GroundingJudgment(BaseModel):

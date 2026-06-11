@@ -22,9 +22,9 @@ the tool-planning runtime + ADK instrumentation.
 **Status:** Accepted
 
 The mechanism that catches confident fabrications. An unsupported specific claim
-on a high-stakes topic is quarantined. See [`../DESIGN.md`](../DESIGN.md). The
-risk is over-quarantining the harmless; the mitigation is triage (only the full
-path grounds) + per-claim checkability.
+on a high-stakes topic is quarantined. The risk is over-quarantining the
+harmless; the mitigation is triage (only the full path grounds) + per-claim
+checkability.
 
 ## D-003 — The corpus is the org's voice, never the web
 

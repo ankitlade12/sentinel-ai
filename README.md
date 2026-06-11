@@ -312,7 +312,6 @@ sentinel/
 ├── frontend/          # Next.js dashboard — live demo, review queue, Trust Report
 ├── scripts/           # index_corpus · eval_scenarios · generate_typescript_types
 ├── docs/              # PRD · ARCHITECTURE · DECISIONS · ARIZE · LOCAL_DEV · GCP_SETUP
-├── DESIGN.md          # the triage / decide policy in prose
 ├── pyproject.toml     # Python deps + tool config
 ├── Makefile           # setup / index / demo / test / lint / dev / docker
 └── docker-compose.yml

@@ -11,7 +11,7 @@ engineering decisions see [`DECISIONS.md`](DECISIONS.md).
 | The data contract | `backend/models/` |
 | How a question is judged | `backend/agents/sentinel.py` (the loop) |
 | The grounding catch mechanism | `backend/agents/grounding.py` + `backend/connectors/` |
-| The decision policy | `backend/agents/decide.py` ([`DESIGN.md`](../DESIGN.md) in prose) |
+| The decision policy | `backend/agents/decide.py` + [`DECISIONS.md`](DECISIONS.md) |
 | Arize / Phoenix | `backend/arize/` ([`ARIZE.md`](ARIZE.md)) |
 | The agent runtime | `backend/agents/adk_agent.py` |
 | The API | `backend/api/` |

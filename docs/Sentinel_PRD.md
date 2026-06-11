@@ -36,8 +36,6 @@ a wrong benefit threshold, a wrong eligibility rule.
 4. **Report** — one Phoenix trace + one persisted verdict; the Trust Report is
    generated from the accumulated data.
 
-See [`../DESIGN.md`](../DESIGN.md) for the policy in prose.
-
 ## 4. The trusted corpus
 
 6–10 vetted documents per org (USCIS form instructions, a state benefits page, a

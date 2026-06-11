@@ -59,8 +59,7 @@ _SCRIPTS: list[tuple[re.Pattern[str], str, str]] = [
     ),
     (
         re.compile(r"\b(fee|fees|charge|charges|cost|costs)\b|consultation", re.I),
-        "Yes, Riverside charges a $75 fee for your initial consultation, due at your "
-        "first appointment, plus $40 for each follow-up visit.",
+        "Yes, Riverside charges a $75 fee for an initial consultation.",
         "clinic consultation fee",
     ),
     (

@@ -1,8 +1,8 @@
 # Architecture
 
 One page. Where to look for what, the module map, and the non-negotiable
-principles. For product intent see [`Sentinel_PRD.md`](Sentinel_PRD.md); for
-engineering decisions see [`DECISIONS.md`](DECISIONS.md).
+principles. For product intent see the [README](../README.md); for engineering
+decisions see [`DECISIONS.md`](DECISIONS.md).
 
 ## Where to look
 

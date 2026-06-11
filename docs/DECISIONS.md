@@ -41,8 +41,7 @@ quarantine and a corpus-gap entry in the Trust Report.
 `CorpusConnector` and `QuarantineStore` are protocols. `config.get_corpus()` /
 `get_store()` are the single swap points between hermetic mocks (CI/offline) and
 Vertex AI Vector Search + Firestore (demo/prod). Contract tests run against the
-mock; the same suite is `@pytest.mark.live` against the real services. Mirrors
-GoldMind's `get_connector()` discipline.
+mock; the same suite is `@pytest.mark.live` against the real services.
 
 ## D-005 — Structured outputs everywhere; TS generated from Pydantic
 

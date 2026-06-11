@@ -4,7 +4,7 @@ Settings are read from the environment (loaded from ``.env`` via python-dotenv
 at app startup). Two factories are the single places where Sentinel chooses
 between hermetic and cloud-backed implementations — agents and API handlers
 call ``get_corpus()`` / ``get_store()`` rather than importing implementations
-directly, exactly as GoldMind's ``get_connector()`` does:
+directly:
 
 - ``get_corpus()`` → trusted-corpus RAG (Vertex AI Vector Search, or in-memory mock)
 - ``get_store()``  → quarantine + verdict store (Firestore, or in-memory mock)

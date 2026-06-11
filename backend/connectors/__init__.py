@@ -5,5 +5,5 @@
 
 Agents and API handlers depend on the protocols here, never on a concrete
 implementation. ``backend.config.get_corpus()`` / ``get_store()`` choose which
-one is live, exactly as GoldMind's ``get_connector()`` selects mock vs Databricks.
+one is live (mock in-memory vs cloud-backed).
 """

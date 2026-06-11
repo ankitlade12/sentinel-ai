@@ -2,7 +2,7 @@
 
 The dashboard subscribes to these named events to render the run progressively
 (triage lands, plan written, claims appear, grounding verdicts arrive, evals
-score, final verdict). Mirrors GoldMind's ``_event_name`` switch.
+score, final verdict).
 """
 
 from __future__ import annotations

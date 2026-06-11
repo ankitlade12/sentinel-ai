@@ -1,8 +1,7 @@
 """Load agent system prompts from ``backend/agents/prompts/*.md``.
 
 Keeping prompts as markdown files (rather than inline strings) makes them
-reviewable in diffs and editable without touching code — the same convention
-GoldMind uses for its agent prompts.
+reviewable in diffs and editable without touching code.
 """
 
 from __future__ import annotations

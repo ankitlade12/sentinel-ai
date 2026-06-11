@@ -1,7 +1,6 @@
 # Sentinel — Product Requirements
 
-> The canonical, abridged product spec. The full build specification lives at
-> [`../sentinel-build-spec.md`](../sentinel-build-spec.md).
+The canonical, abridged product spec for Sentinel.
 
 ## 1. Thesis
 

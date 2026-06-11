@@ -1,7 +1,5 @@
 .git
 .github
-.claude
-.codex
 .venv
 node_modules
 frontend/node_modules

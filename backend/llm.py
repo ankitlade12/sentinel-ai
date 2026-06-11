@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import json
 import logging
+import time
+from collections.abc import Callable
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
@@ -30,6 +32,37 @@ if TYPE_CHECKING:
     from google.genai import Client
 
 logger = logging.getLogger(__name__)
+
+# Retry transient Gemini errors (model overload / rate limit) so a single demo
+# run doesn't die on a momentary 503/429.
+_TRANSIENT_MARKERS = ("429", "500", "503", "UNAVAILABLE", "RESOURCE_EXHAUSTED", "overloaded", "high demand")
+_MAX_ATTEMPTS = 4
+
+
+def _is_transient(exc: Exception) -> bool:
+    message = str(exc)
+    return any(marker in message for marker in _TRANSIENT_MARKERS)
+
+
+def _call_with_retry[R](fn: Callable[[], R]) -> R:
+    """Call ``fn``, retrying transient Gemini failures with exponential backoff."""
+    delay = 1.0
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        try:
+            return fn()
+        except Exception as exc:
+            if attempt == _MAX_ATTEMPTS or not _is_transient(exc):
+                raise
+            logger.warning(
+                "llm: transient error (attempt %d/%d): %s — retrying in %.1fs",
+                attempt,
+                _MAX_ATTEMPTS,
+                exc,
+                delay,
+            )
+            time.sleep(delay)
+            delay *= 2
+    raise RuntimeError("unreachable")  # pragma: no cover
 
 
 @lru_cache(maxsize=1)
@@ -82,10 +115,12 @@ def generate_structured[T: BaseModel](
         response_mime_type="application/json",
         response_schema=schema,
     )
-    response = client.models.generate_content(
-        model=model or settings.gemini_model,
-        contents=prompt,
-        config=config,
+    response = _call_with_retry(
+        lambda: client.models.generate_content(
+            model=model or settings.gemini_model,
+            contents=prompt,
+            config=config,
+        )
     )
 
     parsed = getattr(response, "parsed", None)
@@ -111,9 +146,11 @@ def generate_text(
     settings = get_settings()
     client = get_genai_client()
     config = types.GenerateContentConfig(system_instruction=system, temperature=temperature)
-    response = client.models.generate_content(
-        model=model or settings.gemini_model,
-        contents=prompt,
-        config=config,
+    response = _call_with_retry(
+        lambda: client.models.generate_content(
+            model=model or settings.gemini_model,
+            contents=prompt,
+            config=config,
+        )
     )
     return (response.text or "").strip()

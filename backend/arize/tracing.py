@@ -50,6 +50,7 @@ def setup_tracing() -> bool:
         tracer_provider = register(
             project_name=settings.phoenix_project_name,
             endpoint=endpoint,
+            batch=True,  # BatchSpanProcessor: reliable async export of every child LLM span
             auto_instrument=False,  # we attach the Google-stack instrumentors explicitly
         )
         _instrument(tracer_provider)
@@ -111,6 +112,9 @@ def agent_span(name: str, attributes: dict[str, Any] | None = None) -> Iterator[
     Yields a :class:`SpanHandle` carrying the trace id + deep link, which are
     persisted onto the verdict so the dashboard can link to the Phoenix trace.
     """
+    # Only the span *setup* is guarded — exceptions from the wrapped body must
+    # propagate (the span records them as ERROR and re-raises). Guarding the
+    # body would yield a second time and raise "generator didn't stop after throw".
     if not _TRACING_ACTIVE:
         yield SpanHandle()
         return
@@ -118,15 +122,18 @@ def agent_span(name: str, attributes: dict[str, Any] | None = None) -> Iterator[
         from opentelemetry import trace
 
         tracer = trace.get_tracer("sentinel")
-        with tracer.start_as_current_span(name) as span:
-            for key, value in (attributes or {}).items():
-                span.set_attribute(key, value)
-            ctx = span.get_span_context()
-            trace_id = format(ctx.trace_id, "032x") if ctx and ctx.trace_id else None
-            yield SpanHandle(trace_id=trace_id, trace_url=_trace_url(trace_id), _span=span)
+        span_cm = tracer.start_as_current_span(name)
     except Exception:  # pragma: no cover - defensive
-        logger.debug("tracing: agent_span failed; using no-op", exc_info=True)
+        logger.debug("tracing: agent_span setup failed; using no-op", exc_info=True)
         yield SpanHandle()
+        return
+
+    with span_cm as span:
+        for key, value in (attributes or {}).items():
+            span.set_attribute(key, value)
+        ctx = span.get_span_context()
+        trace_id = format(ctx.trace_id, "032x") if ctx and ctx.trace_id else None
+        yield SpanHandle(trace_id=trace_id, trace_url=_trace_url(trace_id), _span=span)
 
 
 def record_evals(span: SpanHandle, evals: list[Any]) -> None:

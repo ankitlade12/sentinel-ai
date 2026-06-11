@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     image: sentinel-backend:latest
     container_name: sentinel-backend
     restart: unless-stopped
@@ -10,6 +10,7 @@ services:
       - ${SENTINEL_RUNTIME_ENV_FILE:-.env}
     environment:
       PYTHONUNBUFFERED: "1"
+      PORT: "8000"
     ports:
       - "8000:8000"
     healthcheck:

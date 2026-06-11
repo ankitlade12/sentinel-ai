@@ -1,6 +1,7 @@
 # Sentinel backend — FastAPI + SSE on Cloud Run.
-# Uses uv for reproducible, fast installs from pyproject + uv.lock.
-FROM python:3.12-slim AS base
+# Root Dockerfile (build context = repo root) so `gcloud run deploy --source .`
+# picks it up. Uses uv for reproducible installs from pyproject + uv.lock.
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -16,11 +17,11 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --no-dev --no-install-project
 
-# App code.
+# App code (corpus markdown is re-included via .dockerignore).
 COPY backend/ ./backend/
 
-# Cloud Run injects PORT; default to 8000 for local/compose parity.
-ENV PORT=8000
-EXPOSE 8000
+# Cloud Run injects PORT (default 8080); default keeps local docker parity.
+ENV PORT=8080
+EXPOSE 8080
 
-CMD ["sh", "-c", "uv run --no-dev uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", ".venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]

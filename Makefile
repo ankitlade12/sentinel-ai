@@ -66,7 +66,7 @@ clean:
 # ── Docker ────────────────────────────────────────────────────────────────────
 
 docker-build:
-	docker build -f backend/Dockerfile --tag $(BACKEND_IMAGE):$(TAG) .
+	docker build -f Dockerfile --tag $(BACKEND_IMAGE):$(TAG) .
 	docker build -f frontend/Dockerfile --tag $(FRONTEND_IMAGE):$(TAG) frontend
 
 docker-up:

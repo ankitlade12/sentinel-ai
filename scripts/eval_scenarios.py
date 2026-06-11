@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv(override=False)
 
 from backend.agents.sentinel import build_default_agent  # noqa: E402
+from backend.arize.tracing import setup_tracing  # noqa: E402
 from backend.casa.bot import CasaBot  # noqa: E402
 
 logging.basicConfig(level="WARNING")
@@ -29,6 +30,7 @@ SCENARIOS = [
 
 
 def main() -> None:
+    setup_tracing()  # stream the runs to Phoenix
     casa = CasaBot()
     agent = build_default_agent()
     print("=" * 88)

@@ -40,10 +40,17 @@ def setup_tracing() -> bool:
     try:
         from phoenix.otel import register
 
+        # Phoenix Cloud's OTLP HTTP ingest path is <collector>/v1/traces. Passing
+        # an explicit endpoint skips Phoenix's auto-append, so we add it ourselves
+        # (otherwise the exporter POSTs to the UI base and gets a 405).
+        endpoint = settings.phoenix_collector_endpoint.rstrip("/")
+        if not endpoint.endswith("/v1/traces"):
+            endpoint = f"{endpoint}/v1/traces"
+
         tracer_provider = register(
             project_name=settings.phoenix_project_name,
-            endpoint=settings.phoenix_collector_endpoint,
-            auto_instrument=True,  # picks up installed OpenInference instrumentors
+            endpoint=endpoint,
+            auto_instrument=False,  # we attach the Google-stack instrumentors explicitly
         )
         _instrument(tracer_provider)
         _TRACING_ACTIVE = True

@@ -59,7 +59,7 @@ class Settings(BaseModel):
 
     # Reasoning — Gemini.
     llm_provider: LLMProvider = Field(default="vertex")
-    gemini_model: str = Field(default="gemini-2.5-pro")
+    gemini_model: str = Field(default="gemini-2.5-flash")
     gemini_api_key: str = Field(
         default="", description="Only used when llm_provider == 'ai_studio'."
     )
@@ -108,7 +108,7 @@ def get_settings() -> Settings:
         corpus_backend=corpus,
         store_backend=store,
         llm_provider=provider,
-        gemini_model=_env("SENTINEL_GEMINI_MODEL", "gemini-2.5-pro"),
+        gemini_model=_env("SENTINEL_GEMINI_MODEL", "gemini-2.5-flash"),
         gemini_api_key=_env("GEMINI_API_KEY"),
         google_cloud_project=_env("GOOGLE_CLOUD_PROJECT"),
         google_cloud_location=_env("GOOGLE_CLOUD_LOCATION", "us-central1"),

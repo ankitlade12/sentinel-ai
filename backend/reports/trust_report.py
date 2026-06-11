@@ -21,7 +21,7 @@ from backend.arize import monitors
 from backend.connectors.store_protocol import QuarantineStore
 from backend.models.grounding import GroundingStatus
 from backend.models.trust_report import TrustReport
-from backend.models.verdict import Decision, SentinelVerdict
+from backend.models.verdict import Decision, ReviewStatus, SentinelVerdict
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +104,11 @@ def generate_trust_report(
     total = len(verdicts)
     cleared = sum(1 for v in verdicts if v.decision == Decision.ALLOW)
     corrected = sum(1 for v in verdicts if v.decision == Decision.REPAIR_ALLOW)
-    held = sum(1 for v in verdicts if v.decision == Decision.QUARANTINE)
+    quarantined = [v for v in verdicts if v.decision == Decision.QUARANTINE]
+    # "Held" is what still needs the team's eyes; once a director acts on an item
+    # it moves to "reviewed" — so clearing the queue updates the report.
+    held = sum(1 for v in quarantined if v.review_status == ReviewStatus.PENDING)
+    reviewed = sum(1 for v in quarantined if v.review_status != ReviewStatus.PENDING)
 
     now = datetime.now(UTC)
     report = TrustReport(
@@ -115,6 +119,7 @@ def generate_trust_report(
         cleared=cleared,
         corrected=corrected,
         held=held,
+        reviewed=reviewed,
         headline=f"This week, your assistant answered {total} question{'s' if total != 1 else ''}.",
         what_was_caught=_caught_bullets(verdicts),
         trend=_trend(verdicts),

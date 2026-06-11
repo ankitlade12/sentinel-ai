@@ -203,6 +203,7 @@ export interface TrustReport {
   cleared?: number;
   corrected?: number;
   held?: number;
+  reviewed?: number;
   headline: string;
   what_was_caught?: string[];
   trend: string;

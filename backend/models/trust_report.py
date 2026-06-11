@@ -35,7 +35,8 @@ class TrustReport(BaseModel):
     total_answered: int = Field(default=0, ge=0)
     cleared: int = Field(default=0, ge=0)
     corrected: int = Field(default=0, ge=0)
-    held: int = Field(default=0, ge=0)
+    held: int = Field(default=0, ge=0, description="Quarantined and still pending the team's review.")
+    reviewed: int = Field(default=0, ge=0, description="Quarantined and since acted on by a director.")
 
     headline: str = Field(
         ...,

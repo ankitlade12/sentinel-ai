@@ -52,16 +52,18 @@ export function TrustReportView() {
         <CardContent>
           <p className="text-lg font-medium">{report.headline}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sentinel cleared {report.cleared} automatically, corrected {report.corrected} with
-            citations, and held {report.held} for your team&apos;s review.
+            Sentinel cleared {report.cleared ?? 0} automatically, corrected {report.corrected ?? 0}{" "}
+            with citations, and held {report.held ?? 0} for your team&apos;s review
+            {(report.reviewed ?? 0) > 0 ? `; your team has since reviewed ${report.reviewed}` : ""}.
           </p>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Cleared" value={report.cleared ?? 0} tone="text-allow" />
         <Stat label="Corrected & cited" value={report.corrected ?? 0} tone="text-[hsl(30_90%_40%)]" />
         <Stat label="Held for review" value={report.held ?? 0} tone="text-quarantine" />
+        <Stat label="Reviewed by team" value={report.reviewed ?? 0} tone="text-muted-foreground" />
       </div>
 
       <Card>

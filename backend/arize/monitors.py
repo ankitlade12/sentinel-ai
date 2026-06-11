@@ -126,7 +126,10 @@ def riskiest_and_safest(stats: list[TopicStat]) -> tuple[str, str]:
         return "", ""
     riskiest = max(eligible, key=lambda s: (s.quarantine_rate, s.answered))
     safest = min(eligible, key=lambda s: (s.quarantine_rate, -s.answered))
-    return riskiest.topic, safest.topic
+    # If every topic is equally risky (or there is only one), there is no
+    # meaningful "safest" — don't label a quarantined topic as the safe one.
+    safest_topic = "" if safest.topic == riskiest.topic else safest.topic
+    return riskiest.topic, safest_topic
 
 
 def corpus_gap_topics(verdicts: list[SentinelVerdict]) -> list[str]:

@@ -1,6 +1,6 @@
 # Sentinel — A Safety Layer Against Confidently-Wrong AI
 
-**Built with:** Python 3.12 · Google ADK · Gemini · Arize Phoenix (OpenInference) · Vertex AI embeddings · FastAPI + SSE · Next.js · Cloud Run · uv · MIT licensed
+**Built with:** Python 3.12 · Google ADK · Gemini · Arize Phoenix (OpenInference + MCP) · Vertex AI embeddings · FastAPI + SSE · Next.js · Cloud Run · uv · MIT licensed
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com/)
@@ -158,7 +158,7 @@ graph TB
 |---|---|---|
 | **Agent runtime** | Google ADK (`LlmAgent`) + a deterministic orchestrator | Tool-planning runtime the Arize track requires, plus a reliable streamable sibling that shares the same step modules |
 | **Reasoning** | Gemini (`gemini-2.5-flash`) via the Google GenAI SDK | Triage, claim extraction, the grounding judge, eval rationales — temperature 0, structured output |
-| **Evals / traces / monitors** | Arize Phoenix via OpenInference | LLM-as-a-Judge evals, one trace per run, per-topic monitors |
+| **Evals / traces / monitors** | Arize Phoenix via OpenInference + a Phoenix MCP server | LLM-as-a-Judge evals (decision input), one trace per run, per-topic monitors, and a Phoenix MCP server the ADK agent spawns over stdio and calls at runtime |
 | **Corpus RAG** | Vertex AI / `gemini-embedding-001` + in-memory cosine | Semantic retrieval over the org's vetted documents (hermetic hashing fallback for CI) |
 | **Quarantine store** | Firestore (in-memory mock for CI) | Verdict audit log + the director's review queue |
 | **API** | FastAPI + SSE (sse-starlette) | Streams the agent's visible decisions to the dashboard |
@@ -221,7 +221,7 @@ Two rules are absolute: **never silently rewrite without labeling**, and **never
 
 ### Self-improvement — monitoring as memory
 
-A topic's risk threshold adapts to its own history (`backend/arize/monitors.py`): quarantine-rate `0.20 → +0.00`; `0.50+ → +0.15` (capped), with a sample floor. A topic that's been drifting raises its own support bar, so borderline answers on it are held more readily — and every effective threshold is recorded on the verdict's `policy_snapshot`. The agent can read the same signal at runtime through the **Phoenix MCP server**.
+A topic's risk threshold adapts to its own history (`backend/arize/monitors.py`): quarantine-rate `0.20 → +0.00`; `0.50+ → +0.15` (capped), with a sample floor. A topic that's been drifting raises its own support bar, so borderline answers on it are held more readily — and every effective threshold is recorded on the verdict's `policy_snapshot`. The **Google ADK agent reads the same signal at runtime by calling the Phoenix MCP server** (`backend/arize/phoenix_mcp_server.py`) — a Python MCP server it spawns over stdio that queries Arize Phoenix Cloud live.
 
 ## Arize Phoenix — three load-bearing roles
 
@@ -229,7 +229,7 @@ A topic's risk threshold adapts to its own history (`backend/arize/monitors.py`)
 |---|---|---|
 | **Evals as a decision input** | `backend/arize/evals.py` | Phoenix-style LLM-as-a-Judge (hallucination / QA-correctness / toxicity) with the corpus passages as ground-truth context — *consumed by the decider*, not logged after the fact |
 | **Tracing as the audit trail** | `backend/arize/tracing.py` | Every run is one OpenInference trace (triage → claims → grounding → evals → decision); when an AI-accountability rule asks the clinic to *prove oversight*, the trace **is** the answer |
-| **Monitoring as memory** | `backend/arize/monitors.py` + `mcp.py` | The agent reads back its own per-topic quarantine rates and adapts — the self-improvement loop, exposed to the LLM via the Phoenix MCP server |
+| **Monitoring as memory** | `backend/arize/monitors.py` + `mcp.py` + `phoenix_mcp_server.py` | The agent reads back its own per-topic quarantine rates and adapts — the self-improvement loop. The **Google ADK agent spawns the Phoenix MCP server over stdio and calls it at runtime** (`phoenix_project_summary` queries Phoenix Cloud live) |
 
 See [`docs/ARIZE.md`](docs/ARIZE.md).
 
@@ -304,7 +304,7 @@ sentinel/
 │   │   ├── adk_agent.py   # Google ADK LlmAgent runtime
 │   │   ├── tools/         # ADK function tools wrapping the step modules
 │   │   └── prompts/       # system prompts as markdown
-│   ├── arize/         # evals (decision input) · tracing (audit) · monitors + mcp (memory)
+│   ├── arize/         # evals (decision input) · tracing (audit) · monitors + Phoenix MCP server (memory)
 │   ├── casa/          # the demo legal-aid bot (a prop)
 │   ├── reports/       # the Trust Report generator
 │   ├── api/           # FastAPI app + SSE endpoints

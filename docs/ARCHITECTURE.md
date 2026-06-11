@@ -53,7 +53,7 @@ backend/
 │   ├── adk_agent  Google ADK LlmAgent runtime (the code-owned runtime the track requires)
 │   ├── tools/     ADK function tools wrapping the step modules
 │   └── prompts/   System prompts as markdown
-├── arize/         evals (decision input) · tracing (audit) · monitors + mcp (memory)
+├── arize/         evals (decision input) · tracing (audit) · monitors + mcp + phoenix_mcp_server (memory)
 ├── casa/          The demo legal-aid bot (a prop, intentionally imperfect)
 ├── reports/       The Trust Report generator
 ├── api/           FastAPI app + SSE endpoints

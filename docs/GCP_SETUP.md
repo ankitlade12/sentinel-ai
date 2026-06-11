@@ -45,8 +45,9 @@ index instead:
 ## 5. Phoenix
 
 Free Phoenix Cloud account → https://app.phoenix.arize.com. Set
-`PHOENIX_COLLECTOR_ENDPOINT`, `PHOENIX_API_KEY`, `PHOENIX_PROJECT_NAME`, and
-optionally `PHOENIX_MCP_ENDPOINT`. See [`ARIZE.md`](ARIZE.md).
+`PHOENIX_COLLECTOR_ENDPOINT`, `PHOENIX_API_KEY`, and `PHOENIX_PROJECT_NAME`. The
+ADK agent spawns a built-in Phoenix MCP server in-process and calls it at
+runtime — no endpoint needed. See [`ARIZE.md`](ARIZE.md).
 
 ## 6. Deploy to Cloud Run
 

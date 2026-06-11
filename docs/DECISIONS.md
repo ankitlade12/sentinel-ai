@@ -118,3 +118,18 @@ The Gemini SDK is synchronous. The streaming endpoint runs the orchestrator in a
 thread and bridges its `emit` callback into an asyncio queue
 (`api/ask.py`). Keeps the loop simple and testable while still streaming the
 agent's visible decisions.
+
+## D-014 — The Phoenix MCP server runs in-process over stdio
+
+**Status:** Accepted
+
+The Arize track wants the partner's MCP server called at runtime. Rather than
+require an external Phoenix MCP endpoint (the official server is a Node/npx
+process that doesn't fit the Python Cloud Run image), Sentinel ships a small
+Python Phoenix MCP server (`arize/phoenix_mcp_server.py`, FastMCP) that queries
+Arize Phoenix Cloud, and the Google ADK agent spawns it over stdio
+(`StdioConnectionParams`). The prompt directs the agent to call
+`phoenix_project_summary` first, so the MCP server is genuinely imported and
+called at runtime — verified by a live `HTTP 200` from Phoenix during
+`/api/agent`. Contained to the agent path; the dashboard orchestrator is
+unaffected. The ADK path also retries transient Gemini 503s.

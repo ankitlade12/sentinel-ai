@@ -13,11 +13,15 @@ import os
 
 import pytest
 
-# Force hermetic backends before any settings are read.
-os.environ.setdefault("SENTINEL_CORPUS", "mock")
-os.environ.setdefault("SENTINEL_STORE", "mock")
-os.environ.setdefault("SENTINEL_LLM_PROVIDER", "ai_studio")
+# Force hermetic backends before any settings are read. PHOENIX_* are set to ""
+# (override) so the app's load_dotenv(override=False) can't re-enable tracing from
+# a developer's .env — no network or span export in the test tiers.
+os.environ["SENTINEL_CORPUS"] = "mock"
+os.environ["SENTINEL_STORE"] = "mock"
+os.environ["SENTINEL_LLM_PROVIDER"] = "ai_studio"
 os.environ.setdefault("GEMINI_API_KEY", "test-key")
+os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = ""
+os.environ["PHOENIX_API_KEY"] = ""
 
 from backend.config import get_settings
 from backend.connectors.mock_corpus import MockCorpusConnector

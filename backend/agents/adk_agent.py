@@ -49,34 +49,52 @@ def build_sentinel_adk_agent() -> Any:
     )
 
 
+async def _run_adk_once(question: str, draft_answer: str, *, user_id: str) -> str:
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai import types
+
+    agent = build_sentinel_adk_agent()
+    session_service = InMemorySessionService()  # type: ignore[no-untyped-call]
+    session = await session_service.create_session(app_name=_APP_NAME, user_id=user_id)
+    runner = Runner(agent=agent, app_name=_APP_NAME, session_service=session_service)
+
+    message = types.Content(
+        role="user",
+        parts=[types.Part(text=f"QUESTION:\n{question}\n\nDRAFT ANSWER:\n{draft_answer}")],
+    )
+    final = ""
+    async for event in runner.run_async(
+        user_id=user_id, session_id=session.id, new_message=message
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            final = "".join(part.text or "" for part in event.content.parts)
+    return final or "(agent produced no final response)"
+
+
 async def run_adk(question: str, draft_answer: str, *, user_id: str = "demo") -> str:
     """Run the ADK agent over one (question, answer) pair and return its summary.
 
-    Best-effort: returns a readable error string rather than raising, so the demo
-    endpoint degrades gracefully if the ADK runtime or Gemini credentials are
-    unavailable.
+    Retries transient Gemini errors (503/429) so the endpoint is robust under
+    model overload — the same posture the dashboard orchestrator uses. Degrades
+    to a readable error string rather than raising on anything else.
     """
-    try:
-        from google.adk.runners import Runner
-        from google.adk.sessions import InMemorySessionService
-        from google.genai import types
+    import asyncio
 
-        agent = build_sentinel_adk_agent()
-        session_service = InMemorySessionService()  # type: ignore[no-untyped-call]
-        session = await session_service.create_session(app_name=_APP_NAME, user_id=user_id)
-        runner = Runner(agent=agent, app_name=_APP_NAME, session_service=session_service)
+    from backend.llm import _is_transient
 
-        message = types.Content(
-            role="user",
-            parts=[types.Part(text=f"QUESTION:\n{question}\n\nDRAFT ANSWER:\n{draft_answer}")],
-        )
-        final = ""
-        async for event in runner.run_async(
-            user_id=user_id, session_id=session.id, new_message=message
-        ):
-            if event.is_final_response() and event.content and event.content.parts:
-                final = "".join(part.text or "" for part in event.content.parts)
-        return final or "(agent produced no final response)"
-    except Exception as exc:  # pragma: no cover - depends on ADK runtime + creds
-        logger.warning("adk: run failed", exc_info=True)
-        return f"ADK runtime unavailable: {exc}"
+    delay = 1.0
+    last: Exception | None = None
+    for attempt in range(1, 5):
+        try:
+            return await _run_adk_once(question, draft_answer, user_id=user_id)
+        except Exception as exc:  # pragma: no cover - depends on ADK runtime + creds
+            last = exc
+            if _is_transient(exc) and attempt < 4:
+                logger.warning("adk: transient error (attempt %d/4); retrying in %.1fs", attempt, delay)
+                await asyncio.sleep(delay)
+                delay *= 2
+                continue
+            logger.warning("adk: run failed", exc_info=True)
+            return f"ADK runtime unavailable: {exc}"
+    return f"ADK runtime unavailable: {last}"

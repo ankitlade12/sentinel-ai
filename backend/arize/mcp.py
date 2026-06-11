@@ -62,21 +62,34 @@ def topic_health(topic: str, store: QuarantineStore, *, org_id: str) -> TopicHea
 
 
 def build_phoenix_mcp_toolset() -> object | None:
-    """Build an ADK MCP toolset for the Phoenix MCP server, or None if unconfigured.
+    """Build an ADK MCP toolset that spawns the local Phoenix MCP server (stdio).
 
-    Used by the ADK agent so the LLM can call Phoenix introspection tools at
-    runtime. Imported lazily; returns None if ADK/MCP deps are unavailable.
+    The Google ADK agent connects to ``backend/arize/phoenix_mcp_server.py`` over
+    stdio at runtime, so the LLM can call its Phoenix observability tools
+    (project summary, per-topic risk history) while it reasons. Pure Python — no
+    Node — so it runs inside the same container as the agent. Returns None only
+    if the ADK/MCP deps are unavailable.
     """
-    settings = get_settings()
-    if not settings.phoenix_mcp_endpoint:
-        return None
+    import os
+    import sys
+
     try:
         from google.adk.tools.mcp_tool.mcp_toolset import (  # type: ignore[attr-defined]
             McpToolset,
-            SseServerParams,
+            StdioConnectionParams,
+            StdioServerParameters,
         )
 
-        return McpToolset(connection_params=SseServerParams(url=settings.phoenix_mcp_endpoint))
-    except Exception:  # pragma: no cover - optional dependency / endpoint
+        return McpToolset(
+            connection_params=StdioConnectionParams(
+                server_params=StdioServerParameters(
+                    command=sys.executable,
+                    args=["-m", "backend.arize.phoenix_mcp_server"],
+                    env=dict(os.environ),
+                ),
+                timeout=30.0,
+            )
+        )
+    except Exception:  # pragma: no cover - optional dependency
         logger.warning("mcp: could not build Phoenix MCP toolset", exc_info=True)
         return None

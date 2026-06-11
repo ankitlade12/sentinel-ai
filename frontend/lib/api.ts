@@ -86,12 +86,14 @@ export async function askStream(
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
 
-    const chunks = buffer.split("\n\n");
+    // Events are separated by a blank line. sse-starlette uses CRLF, so accept
+    // both \r\n\r\n and \n\n (and split fields on either line ending).
+    const chunks = buffer.split(/\r\n\r\n|\n\n/);
     buffer = chunks.pop() ?? "";
     for (const chunk of chunks) {
       let event = "message";
       const dataLines: string[] = [];
-      for (const line of chunk.split("\n")) {
+      for (const line of chunk.split(/\r\n|\n/)) {
         if (line.startsWith("event:")) event = line.slice(6).trim();
         else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
       }

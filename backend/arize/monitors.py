@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from backend.connectors.store_protocol import QuarantineStore
 from backend.models.corpus import CorpusDoc
 from backend.models.grounding import GroundingStatus
+from backend.models.triage import Coverage
 from backend.models.trust_report import TopicStat
 from backend.models.verdict import Decision, SentinelVerdict
 
@@ -129,10 +130,17 @@ def riskiest_and_safest(stats: list[TopicStat]) -> tuple[str, str]:
 
 
 def corpus_gap_topics(verdicts: list[SentinelVerdict]) -> list[str]:
-    """Topics where a claim was 'not found' in the corpus — i.e. coverage gaps."""
+    """Topics the corpus genuinely does not cover.
+
+    A single 'not found' claim is not a gap on its own — the corpus can address a
+    topic yet still not confirm a false specific (e.g. an out-of-date SNAP figure).
+    We flag a gap only when the question also triaged as out-of-corpus, so covered
+    topics are not mislabeled as missing.
+    """
     gaps: set[str] = set()
     for v in verdicts:
-        if any(g.status == GroundingStatus.NOT_FOUND for g in v.grounding):
+        has_not_found = any(g.status == GroundingStatus.NOT_FOUND for g in v.grounding)
+        if has_not_found and v.plan.triage.coverage == Coverage.OUT_OF_CORPUS:
             gaps.add(v.topic)
     return sorted(gaps)
 

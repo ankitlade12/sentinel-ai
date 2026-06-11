@@ -12,6 +12,12 @@ Classify three things:
    - medium: practical consequences but recoverable, or partially factual.
    - low: general information, office logistics, encouragement, no factual risk.
 
+   Note: "money / eligibility" means the USER's stakes — benefit amounts, income
+   limits, fees owed to a government agency, filing costs. The clinic's OWN
+   operational details are not high stakes: its hours, location, and languages are
+   low; a wrong claim about the clinic's own consultation fees is medium (it could
+   wrongly discourage someone from seeking free help), not high.
+
 2. SPECIFICITY — does the draft assert a checkable fact?
    - specific_claim: it states a date, deadline, dollar amount, form number,
      eligibility rule, or other verifiable particular.

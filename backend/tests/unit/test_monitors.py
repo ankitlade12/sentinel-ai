@@ -21,14 +21,19 @@ pytestmark = pytest.mark.unit
 
 
 def _verdict(
-    topic: str, decision: Decision, *, idx: int, not_found: bool = False
+    topic: str,
+    decision: Decision,
+    *,
+    idx: int,
+    not_found: bool = False,
+    coverage: Coverage = Coverage.IN_CORPUS,
 ) -> SentinelVerdict:
     plan = SentinelPlan(
         triage=TriageVerdict(
             topic=topic,
             stakes=StakesLevel.HIGH,
             specificity=Specificity.SPECIFIC_CLAIM,
-            coverage=Coverage.IN_CORPUS,
+            coverage=coverage,
             coverage_score=0.5,
             reasoning="x",
         ),
@@ -99,8 +104,16 @@ def test_coarse_topic_buckets():
     assert monitors.coarse_topic("Some Novel Thing") == "some novel thing"
 
 
-def test_corpus_gap_topics_from_not_found():
+def test_corpus_gap_topics_only_when_out_of_corpus():
     store = MockQuarantineStore()
-    store.save_verdict(_verdict("evictions", Decision.QUARANTINE, idx=1, not_found=True))
+    # not_found + out-of-corpus → a genuine gap
+    store.save_verdict(
+        _verdict("divorce filing", Decision.QUARANTINE, idx=1, not_found=True, coverage=Coverage.OUT_OF_CORPUS)
+    )
+    # not_found but the topic IS covered (e.g. a false SNAP figure) → NOT a gap
+    store.save_verdict(
+        _verdict("SNAP income limit", Decision.QUARANTINE, idx=2, not_found=True, coverage=Coverage.IN_CORPUS)
+    )
     gaps = monitors.corpus_gap_topics(store.list_verdicts(org_id="riverside"))
-    assert "evictions" in gaps
+    assert "divorce filing" in gaps
+    assert "SNAP income limit" not in gaps

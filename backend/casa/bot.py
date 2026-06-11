@@ -58,6 +58,12 @@ _SCRIPTS: list[tuple[re.Pattern[str], str, str]] = [
         "N-400 naturalization eligibility",
     ),
     (
+        re.compile(r"\b(fee|fees|charge|charges|cost|costs)\b|consultation", re.I),
+        "Yes, Riverside charges a $75 fee for your initial consultation, due at your "
+        "first appointment, plus $40 for each follow-up visit.",
+        "clinic consultation fee",
+    ),
+    (
         re.compile(r"office hours|open|hours|when.*open", re.I),
         "We're open Monday through Friday, 9:00 a.m. to 5:00 p.m. Feel free to call "
         "us during those hours and we'll be happy to help.",

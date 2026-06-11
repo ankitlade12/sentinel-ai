@@ -11,6 +11,7 @@ const SAMPLES = [
   "When do I have to renew my green card?",
   "What are your office hours?",
   "What's the income limit for SNAP for a family of three?",
+  "Does the clinic charge a fee for a consultation?",
   "How long until I can apply for citizenship?",
 ];
 

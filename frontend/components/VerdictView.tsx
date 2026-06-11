@@ -8,6 +8,8 @@ import {
   HelpCircle,
   Scale,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type {
   EvalResult,
   GroundingResult,
@@ -56,7 +58,9 @@ function GroundingRow({ g }: { g: GroundingResult }) {
           <FileText className="h-3 w-3" />
           {top ? `${top.doc_title} · verified ${top.last_verified}` : "your clinic's trusted sources"}
         </div>
-        <p className="text-sm text-foreground/90">{top?.text ?? g.explanation}</p>
+        <div className="md text-sm text-foreground/90">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{top?.text ?? g.explanation}</ReactMarkdown>
+        </div>
         {g.corrected_text && (
           <p className="mt-2 text-sm font-medium text-allow">→ {g.corrected_text}</p>
         )}
